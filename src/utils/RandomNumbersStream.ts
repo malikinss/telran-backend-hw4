@@ -1,13 +1,5 @@
 // RandomNumbersStream.ts
 
-/**
- * Options for configuring the random numbers stream.
- * This interface defines the parameters for generating random numbers.
- * The `amount` parameter specifies how many random numbers to generate.
- * The `min` and `max` parameters define the range of possible values.
- * The `isUnique` parameter determines whether the generated numbers should be unique.
- * The `RandomNumbersStream` class uses these options to generate the desired stream of random numbers.
- */
 export interface RandomNumbersOptions {
 	amount: number;
 	min?: number;
@@ -15,26 +7,12 @@ export interface RandomNumbersOptions {
 	isUnique?: boolean;
 }
 
-/**
- * Class for generating a stream of random numbers.
- * This class allows you to specify the amount, range, and uniqueness of the numbers.
- * It provides a method to generate the random numbers based on the provided options.
- */
 export class RandomNumbersStream {
 	private amount: number;
 	private min: number;
 	private max: number;
 	private isUnique: boolean;
 
-	/**
-	 * Constructor for the RandomNumbersStream class.
-	 * @param options - The options for configuring the random numbers stream.
-	 * @param options.amount - The number of random numbers to generate.
-	 * @param options.min - The minimum value for the random numbers (default: Number.MIN_SAFE_INTEGER).
-	 * @param options.max - The maximum value for the random numbers (default: Number.MAX_SAFE_INTEGER).
-	 * @param options.isUnique - Whether the generated numbers should be unique (default: false).
-	 * @throws Will throw an error if the range is invalid, amount is non-positive, or if unique numbers cannot be generated within the specified range.
-	 */
 	constructor({
 		amount,
 		min = Number.MIN_SAFE_INTEGER,
@@ -59,10 +37,6 @@ export class RandomNumbersStream {
 		this.isUnique = isUnique;
 	}
 
-	/**
-	 * Generates a stream of random numbers based on the specified options.
-	 * @returns An array of random numbers.
-	 */
 	public generate(): number[] {
 		const result: number[] = [];
 		const used = new Set<number>();
