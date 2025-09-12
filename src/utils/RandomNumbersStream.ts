@@ -1,87 +1,35 @@
 // RandomNumbersStream.ts
 
-/**
- * Options for generating random numbers.
- * @interface RandomNumbersOptions
- * @param amount - The total number of random numbers to generate.
- * @param min - The minimum value in the range (inclusive). Defaults to Number.MIN_SAFE_INTEGER.
- * @param max - The maximum value in the range (inclusive). Defaults to Number.MAX_SAFE_INTEGER.
- * @param isUnique - Whether all generated numbers should be unique. Defaults to false.
- */
-export interface RandomNumbersOptions {
-	amount: number;
-	min?: number;
-	max?: number;
-	isUnique?: boolean;
-}
+import { Readable } from "node:stream";
 
 /**
- * A class for generating an array of random integers within a specified range.
- *
- * This class allows generating a specified number of random integers, optionally ensuring uniqueness
- * and defining a custom range.
- *
- * @param amount - The total number of random numbers to generate (must be > 0).
- * @param min - The minimum value in the range (inclusive). Defaults to Number.MIN_SAFE_INTEGER.
- * @param max - The maximum value in the range (inclusive). Defaults to Number.MAX_SAFE_INTEGER.
- * @param isUnique - Whether all generated numbers should be unique. Defaults to false.
- *
- * @example
- * ```typescript
- * const generator = new RandomNumbersStream({ amount: 5, min: 1, max: 10, isUnique: true });
- * const numbers = generator.generate();
- * console.log(numbers); // [1, 7, 4, 9, 2]
- * ```
+ * A readable stream that generates random numbers.
+ * Supports both unique and non-unique number generation.
  */
-export class RandomNumbersStream {
-	private amount: number;
-	private min: number;
-	private max: number;
-	private isUnique: boolean;
+export class RandomNumbersStream extends Readable {
+	private readonly min: number;
+	private readonly max: number;
+	private readonly amount: number;
+	private readonly isUnique: boolean;
 
 	/**
-	 * Creates an instance of RandomNumbersStream.
+	 * Creates a stream of random numbers.
 	 *
-	 * Args:
-	 *   {RandomNumbersOptions} options - The configuration options for number generation.
+	 * @param {number} amount - The total number of random numbers to generate.
+	 * @param {number} [min=Number.MIN_SAFE_INTEGER] - The minimum value in the range (inclusive).
+	 * @param {number} [max=Number.MAX_SAFE_INTEGER] - The maximum value in the range (inclusive).
+	 * @param {boolean} [isUnique=false] - Whether all generated numbers should be unique.
 	 *
-	 * Params:
-	 *   @param amount (number): The total number of random numbers to generate (must be > 0).
-	 *   @param min (number): The minimum value in the range (inclusive). Defaults to Number.MIN_SAFE_INTEGER.
-	 *   @param max (number): The maximum value in the range (inclusive). Defaults to Number.MAX_SAFE_INTEGER.
-	 *   @param isUnique (boolean): Whether generated numbers must be unique. Defaults to false.
-	 *
-	 * @returns
-	 *   RandomNumbersStream: The instance of the RandomNumbersStream class.
-	 *
-	 * @throws
-	 *   Error: If `min` is greater than or equal to `max`.
-	 *   Error: If `amount` is less than or equal to zero.
-	 *   Error: If `isUnique` is true but the range is too small to generate the requested amount of unique numbers.
-	 *
-	 * @example
-	 * ```typescript
-	 * const generator = new RandomNumbersStream({ amount: 10, min: 0, max: 100, isUnique: true });
-	 * ```
+	 * @throws {Error} If parameters are invalid (e.g., amount ≤ 0, min ≥ max, or range too small for uniqueness).
 	 */
-	constructor({
-		amount,
-		min = Number.MIN_SAFE_INTEGER,
-		max = Number.MAX_SAFE_INTEGER,
-		isUnique = false,
-	}: RandomNumbersOptions) {
-		if (min >= max) {
-			throw new Error("Invalid range: min must be less than max.");
-		}
-		if (amount <= 0) {
-			throw new Error("Amount must be greater than zero.");
-		}
-		if (isUnique && amount > max - min + 1) {
-			throw new Error(
-				"Cannot generate unique numbers: range too small."
-			);
-		}
-
+	constructor(
+		amount: number,
+		min: number = Number.MIN_SAFE_INTEGER,
+		max: number = Number.MAX_SAFE_INTEGER,
+		isUnique: boolean = false
+	) {
+		super({ objectMode: true });
+		this.validateParams(amount, min, max, isUnique);
 		this.amount = amount;
 		this.min = min;
 		this.max = max;
@@ -89,37 +37,114 @@ export class RandomNumbersStream {
 	}
 
 	/**
-	 * Generates an array of random integers based on the specified options.
+	 * Validates constructor parameters.
 	 *
-	 * @returns
-	 *   number[]: An array of random integers of the specified length and range.
+	 * @param {number} amount - The number of values to generate.
+	 * @param {number} min - Minimum value of the range.
+	 * @param {number} max - Maximum value of the range.
+	 * @param {boolean} isUnique - Whether numbers should be unique.
 	 *
-	 * @example
-	 * ```typescript
-	 * const generator = new RandomNumbersStream({ amount: 5, min: 1, max: 10 });
-	 * const result = generator.generate();
-	 * console.log(result); // e.g., [2, 8, 4, 6, 1]
-	 * ```
+	 * @throws {Error} If parameters are invalid.
+	 *   - Amount is not a positive integer.
+	 *   - Min or max are not integers.
+	 *   - Min is greater than or equal to max.
+	 *   - Uniqueness cannot be achieved within the given range.
 	 */
-	public generate(): number[] {
-		const result: number[] = [];
-		const used = new Set<number>();
-
-		while (result.length < this.amount) {
-			const num =
-				Math.floor(Math.random() * (this.max - this.min + 1)) +
-				this.min;
-
-			if (this.isUnique) {
-				if (!used.has(num)) {
-					used.add(num);
-					result.push(num);
-				}
-			} else {
-				result.push(num);
-			}
+	private validateParams(
+		amount: number,
+		min: number,
+		max: number,
+		isUnique: boolean
+	): void {
+		if (!Number.isInteger(amount) || amount <= 0) {
+			throw new Error("Amount must be a positive integer.");
+		}
+		if (!Number.isInteger(min) || !Number.isInteger(max)) {
+			throw new Error("Min and max must be integers.");
+		}
+		if (min >= max) {
+			throw new Error("Invalid range: min must be less than max.");
 		}
 
-		return result;
+		const rangeLength = max - min + 1;
+		if (isUnique && amount > rangeLength) {
+			throw new Error(
+				"Cannot generate unique numbers: range too small."
+			);
+		}
+	}
+
+	/**
+	 * Implementation of the stream's `_read` method.
+	 * Pushes generated numbers into the stream.
+	 */
+	_read(): void {
+		for (const num of this.generate()) {
+			this.push(num.toString() + "; ");
+		}
+		this.push(null); // end of stream
+	}
+
+	/**
+	 * Generates random numbers based on uniqueness setting.
+	 *
+	 * @returns {number[]} An array of random numbers.
+	 */
+	private generate(): number[] {
+		if (this.isUnique) {
+			return this.generateUnique();
+		}
+		return Array.from({ length: this.amount }, () => this.randomInt());
+	}
+
+	/**
+	 * Generates unique random numbers.
+	 *
+	 * @returns {number[]} An array of unique random numbers.
+	 */
+	private generateUnique(): number[] {
+		const rangeLength = this.max - this.min + 1;
+
+		// If range is small, use "shuffling" method
+		if (rangeLength <= this.amount * 2) {
+			const pool = Array.from(
+				{ length: rangeLength },
+				(_, i) => this.min + i
+			);
+			return this.shuffle(pool).slice(0, this.amount);
+		}
+
+		// If range is large, use a Set to ensure uniqueness
+		const result = new Set<number>();
+		while (result.size < this.amount) {
+			result.add(this.randomInt());
+		}
+		return [...result];
+	}
+
+	/**
+	 * Generates a single random integer within the given range.
+	 *
+	 * @returns {number} A random integer between min and max (inclusive).
+	 */
+	private randomInt(): number {
+		return (
+			Math.floor(Math.random() * (this.max - this.min + 1)) + this.min
+		);
+	}
+
+	/**
+	 * Shuffles an array in place using the Fisher-Yates algorithm.
+	 *
+	 * @template T
+	 * @param {T[]} array - The array to shuffle.
+	 * @returns {T[]} The shuffled array.
+	 */
+	private shuffle<T>(array: T[]): T[] {
+		for (let i = array.length - 1; i > 0; i--) {
+			const j = Math.floor(Math.random() * (i + 1));
+			[array[i], array[j]] = [array[j], array[i]];
+		}
+		return array;
 	}
 }

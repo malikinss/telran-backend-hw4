@@ -1,12 +1,11 @@
 {
 	"name": "telran-backend-hw4",
 	"version": "1.0.0",
-	"description": "```\r RandomNumbersStream class in a separate module\r generates stream of the random integer numbers\r constructor takes\r amount of the streamed numbers\r minimal value (optional with default minimal integer value)\r maximal value (optional with default maximal integer value)\r isUnique - boolean optional parameter with default false\r true value means that stream should contain only unique numbers\r false value means that no requirement of the unique numbers exists\r index.ts\r Using RandomNumbersStream for displaying out N unique random numbers in the range [min, max]\r N, min, max are defined into config file with default values N = 7, min = 1, max = 49\r ```",
-	"main": "index.js",
+	"main": "index.ts",
 	"scripts": {
 		"test": "echo \"Error: no test specified\" && exit 1",
-		"start": "ts-node src/index.ts",
-		"start:dev": "NODE_ENV=development ts-node src/index.ts"
+		"start": "node --no-warnings --loader ts-node/esm src/index.ts",
+		"start:dev": "NODE_ENV=development node --loader ts-node/esm src/index.ts"
 	},
 	"repository": {
 		"type": "git",
@@ -15,7 +14,7 @@
 	"keywords": [],
 	"author": "",
 	"license": "ISC",
-	"type": "commonjs",
+	"type": "module",
 	"bugs": {
 		"url": "https://github.com/malikinss/telran-backend-hw4/issues"
 	},

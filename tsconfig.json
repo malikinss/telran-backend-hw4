@@ -1,8 +1,18 @@
+// tsconfig.json
+
 {
 	"compilerOptions": {
+		"target": "ESNext",
 		"module": "ESNext",
-		"allowSyntheticDefaultImports": true,
+		"moduleResolution": "Node",
+		"strict": true,
+		"esModuleInterop": true,
+		"forceConsistentCasingInFileNames": true,
+		"skipLibCheck": true,
+		"outDir": "./dist",
+		"rootDir": "./src",
 		"allowImportingTsExtensions": true,
 		"noEmit": true
-	}
+	},
+	"include": ["src"]
 }
