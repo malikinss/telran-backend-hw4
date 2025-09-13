@@ -1,68 +1,75 @@
-# Homework 4: RandomNumbersStream and sportloto usage application
+# Homework 4: RandomNumbersStream Application
 
 ## Task Definition
 
 ```
 RandomNumbersStream class in a separate module
-generates stream of the random integer numbers
-constructor takes
-amount of the streamed numbers
-minimal value (optional with default minimal integer value)
-maximal value (optional with default maximal integer value)
-isUnique - boolean optional parameter with default false
-true value means that stream should contain only unique numbers
-false value means that no requirement of the unique numbers exists
+generates a stream of random integer numbers.
+Constructor takes:
+- amount of numbers to generate
+- minimal value (optional, default = Number.MIN_SAFE_INTEGER)
+- maximal value (optional, default = Number.MAX_SAFE_INTEGER)
+- isUnique (optional, default = false):
+  * true → only unique numbers are generated
+  * false → duplicates are allowed
+
 index.ts
-Using RandomNumbersStream for displaying out N unique random numbers in the range [min, max]
-N, min, max are defined into config file with default values N = 7, min = 1, max = 49
+Loads parameters from config (with defaults: N=7, min=1, max=49, isUnique=false),
+then uses RandomNumbersStream to display random numbers.
+Errors should be propagated to the application level for handling.
 ```
 
 ## Description 📝
 
-A TypeScript-based Node.js project that provides a readable stream of random numbers. It supports:
+A TypeScript-based Node.js project that provides a readable stream of random numbers.  
+The project consists of modular utilities for parameter management and a reusable function to display generated numbers.
 
--   Generating unique or non-unique random numbers
+It supports:
+
+-   Unique or non-unique random number generation
 -   Configurable range and amount of numbers
 -   Streaming output to console or other writable streams
--   Robust validation for parameters to prevent runtime errors
-
-This module is designed to be modular, extendable, and easy to integrate into other Node.js applications.
+-   Centralized parameter loading with `config`
+-   Proper error propagation for flexible handling at the application level
 
 ## Purpose 🎯
 
 The main objectives of this project are:
 
--   Practice working with Node.js streams and TypeScript classes
--   Implement a real-world utility that handles random number generation
--   Learn parameter validation and configuration handling
--   Explore streaming data and piping to stdout or other writable destinations
+-   Practice modular design with TypeScript and Node.js streams
+-   Implement reusable utilities for random number generation
+-   Explore error handling and propagation patterns
+-   Learn configuration-driven parameter management
+-   Reinforce clean architecture principles (separation of concerns)
 
 ## Features ✨
 
 -   ✅ Generates both unique and non-unique random numbers
--   ✅ Configurable `amount`, `min`, `max`, and `isUnique` options
--   ✅ Validation for invalid parameters (e.g., invalid ranges, non-positive amounts)
+-   ✅ Configurable `amount`, `min`, `max`, and `isUnique` options via `config` or defaults
+-   ✅ Strong validation for invalid parameters (e.g., invalid ranges, non-positive amounts)
 -   ✅ Stream-based output using Node.js `Readable` streams
--   ✅ Supports large and small ranges efficiently
--   ✅ Console-friendly output with semicolon-separated numbers
+-   ✅ Efficient algorithms for small and large ranges
+-   ✅ Numbers piped directly to stdout with semicolon-separated formatting
+-   ✅ Errors surfaced to the application for custom handling
 
 ## How It Works 🔍
 
--   Parameters are read from a `config` file, or defaults are used if missing
--   A `RandomNumbersStream` instance is created with the resolved parameters
--   The `_read` method generates numbers and pushes them to the stream
--   Unique numbers are generated via a shuffling method for small ranges or a `Set` for large ranges
--   Non-unique numbers are generated randomly with each read cycle
--   The stream is piped to `process.stdout`, displaying numbers continuously
--   Handles `end` and `error` events for proper stream lifecycle management
+-   Parameters are loaded using `loadParams` from **params.ts**, falling back to defaults
+-   `displayRandomNumbers(params)` creates a `RandomNumbersStream` and pipes output to stdout
+-   The stream generates numbers via:
+    -   Shuffling method (small ranges)
+    -   `Set`-based uniqueness check (large ranges)
+-   `end` event resolves the operation cleanly
+-   `error` event rejects the promise, allowing application-level error handling
 
 Example flow:
 
-1. `displayRandomNumbers(params)` is called
-2. Parameters are resolved from config or defaults
-3. A `RandomNumbersStream` instance is created
-4. Numbers are streamed and printed to the console
-5. `end` event signals completion of generation
+1. `index.ts` runs `main()`
+2. Parameters are loaded from config (or defaults)
+3. `displayRandomNumbers(params)` is invoked
+4. Numbers are generated and streamed to the console
+5. On completion → promise resolves
+6. On error → promise rejects, and `index.ts` decides how to handle it
 
 ## Output 📜
 
@@ -85,25 +92,26 @@ ts-node index.ts
 ## Usage Examples 🚀
 
 ```typescript
-import { RandomNumbersStream } from "./utils/RandomNumbersStream";
+import { displayRandomNumbers } from "./utils/displayRandomNumbers";
+import { loadParams } from "./utils/params";
 
-const stream = new RandomNumbersStream(5, 1, 50, true);
+async function main() {
+	const params = loadParams();
+	await displayRandomNumbers(params);
+}
 
-stream.pipe(process.stdout);
-
-stream.on("end", () => {
-	console.log("\nRandom number generation complete.");
-});
-
-stream.on("error", (err) => {
-	console.error("Stream error:", err.message);
+main().catch((err) => {
+	console.error("Application error:", err.message);
+	process.exit(1);
 });
 ```
 
 ## Project Structure 🗂
 
 -   **utils/RandomNumbersStream.ts** – Readable stream class for generating random numbers
--   **index.ts** – Entry point and parameter handling logic
+-   **utils/displayRandomNumbers.ts** – Utility to create a stream and pipe numbers to stdout (returns a promise)
+-   **utils/params.ts** – Parameter loading logic (config + defaults)
+-   **index.ts** – Application entry point, error handling, and orchestration
 -   **config/** – Optional folder for configuration files
 -   **package.json** – Node.js project metadata and dependencies
 -   **tsconfig.json** – TypeScript compiler configuration
@@ -123,10 +131,10 @@ MIT
 
 This project allowed me to:
 
--   Gain experience with Node.js streams and TypeScript classes
--   Implement configurable random number generation with uniqueness control
--   Practice robust parameter validation and error handling
--   Explore piping and event-driven data processing in Node.js
+-   Build a modular Node.js application with TypeScript
+-   Separate concerns into dedicated modules (`params`, `displayRandomNumbers`, `RandomNumbersStream`)
+-   Practice robust error handling with promise-based APIs
+-   Reinforce configuration-driven development and clean coding principles
 
 ---
 
